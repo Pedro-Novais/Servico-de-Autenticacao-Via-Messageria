@@ -1,0 +1,4 @@
+redis
+Flask
+psycopg2
+python-dotenv
