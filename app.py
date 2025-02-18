@@ -4,8 +4,10 @@ from flask import Flask
 from app.repository._Conn import Conn
 from app.routes._Routes import Routes 
 
-from loginComp.main import main_login
-from registerComp.main import main_register
+from manager._Manager import Manager
+from manager._ManagerIntern import ManagerIntern
+from tokens.Tokens import TOKENS
+from tokens.TokensIntern import TOKENS_INTERN
 
 from manager._SendMesssage import SendMessage
 
@@ -22,9 +24,12 @@ def main():
         
         Routes(app=app, redis=redis_client, SendMessage=SendMessage)
         
-        main_login()
-        main_register()
+        manager = Manager(token=TOKENS)
+        manager_intern = ManagerIntern(token=TOKENS_INTERN)
         
+        manager.start_listening_messages()
+        manager_intern.start_listening_messages_intern()
+
         app.run()
 
     except Exception as e:

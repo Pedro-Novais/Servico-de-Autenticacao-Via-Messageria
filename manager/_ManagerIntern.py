@@ -4,12 +4,12 @@ from threading import Thread
 
 import time
 
-class Manager:
+class ManagerIntern:
     def __init__(self, token):
         self.redis_client = Redis(host='localhost', port=6379, decode_responses=True)
         self.token = token
 
-    def listen_messages(self):
+    def listen_messages_intern(self):
         while True:
             event = self.redis_client.brpop("events_queue") 
             if event:
@@ -26,6 +26,6 @@ class Manager:
 
                     self.redis_client.lpush(f"response:{event_id}", json.dumps(response_action))
 
-    def start_listening_messages(self):
-        thread = Thread(target=self.listen_messages, daemon=True)
+    def start_listening_messages_intern(self):
+        thread = Thread(target=self.listen_messages_intern, daemon=True)
         thread.start()

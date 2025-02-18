@@ -5,6 +5,13 @@ class ParameterNotSend(Exception):
         self.msg = msg
         self.code = 404
 
+class EmailAlreadyRegistered(Exception):
+     def __init__(self):
+        msg = "Email já está cadastrado"
+        super().__init__(msg)
+        self.msg = msg
+        self.code = 409
+
 class EmailInvalid(Exception):
     def __init__(self):
         msg = "Email inválido"

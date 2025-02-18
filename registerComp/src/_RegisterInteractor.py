@@ -1,11 +1,17 @@
 import re
 
+from redis import Redis
+
 from app.repository._Conn import Conn
+from manager._SendMesssage import SendMessage
+
+from psycopg2.errors import UniqueViolation
 
 from ._CustomExceptions import (
     ParameterNotSend,
     EmailInvalid,
-    FormatCredentialInvalid
+    FormatCredentialInvalid,
+    EmailAlreadyRegistered
     )
 
 class Register:
@@ -25,10 +31,12 @@ class Register:
                 password=password
             )
 
+            encode_password = self.encode_password(password=password)
+
             self.new_user(
                 name=name,
                 email=email,
-                password=password
+                password=encode_password
             )
 
             response = {
@@ -58,19 +66,45 @@ class Register:
             return response
 
     def new_user(self, name: str, email: str, password: str) -> None:
-        with self.conn.get_connect() as conn:
-            cursor = conn.cursor()
+        try:
+            with self.conn.get_connect() as conn:
+                cursor = conn.cursor()
 
-            sql = """
-                INSERT INTO users (name, email, password)
-                VALUES (%s, %s, %s)
-            """
+                sql = """
+                    INSERT INTO users (name, email, password)
+                    VALUES (%s, %s, %s)
+                """
 
-            user_data = (name, email, password)
-            cursor.execute(sql, user_data)
+                user_data = (name, email, password)
+                cursor.execute(sql, user_data)
 
-            conn.commit()
-            cursor.close()
+                conn.commit()
+                cursor.close()
+        except UniqueViolation:
+            raise EmailAlreadyRegistered()
+        except Exception:
+            raise
+    
+    def encode_password(self, password: str) -> str:
+        redis_client = Redis(host='localhost', port=6379, decode_responses=True)
+
+        data = {
+            "password": password
+        }
+
+        send_message = SendMessage(
+            redis=redis_client,
+            message_type="encode",
+            data=None,
+            data_intern=data
+        )
+
+        response = send_message.action_intern()
+
+        if not response:
+            raise
+
+        return response
 
     def validator(
             self,

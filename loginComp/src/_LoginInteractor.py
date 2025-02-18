@@ -5,7 +5,8 @@ from app.repository._Conn import Conn
 from ._CustomExceptions import (
     ParameterNotSend, 
     EmailInvalid,
-    CredentialInvalid
+    CredentialInvalid,
+    EmailNotRegistered
     )
 
 class Login:
@@ -52,9 +53,34 @@ class Login:
         if not self.validator_email(email=email):
             raise EmailInvalid()
         
-        if not self.validator_password(password=password):
-            raise CredentialInvalid()
+        # if not self.validator_password(password=password):
+        #     raise CredentialInvalid()
         
     def validator_email(self, email: str) -> bool:
         regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         return re.match(regex, email) is not None
+    
+    def validator_email_exist(self, email: str) -> bool:
+        try:
+            with self.conn.get_connect() as conn:
+                cursor = conn.cursor()
+
+                sql = """
+                    SELECT * FROM users WHERE email = ?
+                """
+
+                cursor.execute(sql, email)
+
+                account = cursor.fetchone()
+
+                if not account:
+                    cursor.close()
+                    return False
+                
+                return account
+            
+        except Exception:
+            pass
+
+    def validator_password(self, password: str) -> bool:
+        return False

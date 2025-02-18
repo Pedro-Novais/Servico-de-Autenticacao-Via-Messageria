@@ -1,0 +1,3 @@
+TOKENS = {
+    "auth": "teste"
+}
